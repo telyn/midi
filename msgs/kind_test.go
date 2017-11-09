@@ -27,7 +27,14 @@ func TestKindOf(t *testing.T) {
 		{0xF4, 0xF5, msgs.SystemCommonUndefined},
 		{0xF6, 0xF6, msgs.SystemCommonTuneRequest},
 		{0xF7, 0xF7, msgs.SystemCommonEOX},
-		{0xF8, 0xFF, msgs.RealTime},
+		{0xF8, 0xF8, msgs.RealTimeClock},
+		{0xF9, 0xF9, msgs.RealTimeUndefined},
+		{0xFA, 0xFA, msgs.RealTimeStart},
+		{0xFB, 0xFB, msgs.RealTimeContinue},
+		{0xFC, 0xFC, msgs.RealTimeStop},
+		{0xFD, 0xFD, msgs.RealTimeUndefined},
+		{0xFE, 0xFE, msgs.RealTimeActiveSensing},
+		{0xFF, 0xFF, msgs.RealTimeSystemReset},
 	}
 	for _, test := range tests {
 		if test.TopByte < test.BottomByte {

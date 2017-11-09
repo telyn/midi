@@ -19,7 +19,13 @@ const (
 	SystemCommonUndefined
 	SystemCommonTuneRequest
 	SystemCommonEOX
-	RealTime
+	RealTimeClock
+	RealTimeUndefined
+	RealTimeStart
+	RealTimeContinue
+	RealTimeStop
+	RealTimeActiveSensing
+	RealTimeSystemReset
 )
 
 func KindOf(b byte) Kind {
@@ -52,8 +58,22 @@ func KindOf(b byte) Kind {
 		return SystemCommonTuneRequest
 	case b >= 0xF7 && b <= 0xF7:
 		return SystemCommonEOX
-	case b >= 0xF8 && b <= 0xFF:
-		return RealTime
+	case b >= 0xF8 && b <= 0xF8:
+		return RealTimeClock
+	case b >= 0xF9 && b <= 0xF9:
+		return RealTimeUndefined
+	case b >= 0xFA && b <= 0xFA:
+		return RealTimeStart
+	case b >= 0xFB && b <= 0xFB:
+		return RealTimeContinue
+	case b >= 0xFC && b <= 0xFC:
+		return RealTimeStop
+	case b >= 0xFD && b <= 0xFD:
+		return RealTimeUndefined
+	case b >= 0xFE && b <= 0xFE:
+		return RealTimeActiveSensing
+	case b >= 0xFF && b <= 0xFF:
+		return RealTimeSystemReset
 	}
 	return DataByte
 }
@@ -61,8 +81,7 @@ func KindOf(b byte) Kind {
 // ChannelOf returns the MIDI channel for this status byte
 // if the status byte does not contain a MIDI channel then 0xFF is returned
 func ChannelOf(b byte) byte {
-	switch KindOf(b) {
-	case NoteOff, NoteOn, KeyPressure, ControlChange, ProgramChange, ChannelPressure, PitchBend:
+	if KindOf(b).HasChannel() {
 		return b & 0xF
 	}
 	return 0xFF
@@ -85,9 +104,79 @@ func (k Kind) Bytes() int {
 		return 1
 	case SystemCommonUndefined, SystemCommonTuneRequest, SystemCommonEOX:
 		return 0
-	case RealTime:
+	case RealTimeClock, RealTimeUndefined, RealTimeStart, RealTimeContinue, RealTimeStop, RealTimeActiveSensing, RealTimeSystemReset:
 		return 0
 
 	}
 	return -2
+}
+
+func (k Kind) IsStatus() bool {
+	return k != DataByte
+}
+
+func (k Kind) HasChannel() bool {
+	switch k {
+	case NoteOff, NoteOn, KeyPressure, ControlChange, ProgramChange, ChannelPressure, PitchBend:
+		return true
+	}
+	return false
+}
+
+func (k Kind) RealTime() bool {
+	switch k {
+	case RealTimeClock, RealTimeUndefined, RealTimeStart, RealTimeContinue, RealTimeStop, RealTimeActiveSensing, RealTimeSystemReset:
+		return true
+	}
+	return false
+}
+
+// Byte gets the status byte for this Kind.
+// If k.HasChannel() then the calling function will need to bitwise-or the result with a channel between 0x00 and 0x0F
+func (k Kind) Byte() byte {
+	switch k {
+	case NoteOff:
+		return 0x80
+	case NoteOn:
+		return 0x90
+	case KeyPressure:
+		return 0xA0
+	case ControlChange:
+		return 0xB0
+	case ProgramChange:
+		return 0xC0
+	case ChannelPressure:
+		return 0xD0
+	case PitchBend:
+		return 0xE0
+	case SystemExclusive:
+		return 0xF0
+	case SystemCommonTimeCode:
+		return 0xF1
+	case SystemCommonSongPositionPointer:
+		return 0xF2
+	case SystemCommonSongSelect:
+		return 0xF3
+	case SystemCommonUndefined:
+		return 0xF4
+	case SystemCommonTuneRequest:
+		return 0xF6
+	case SystemCommonEOX:
+		return 0xF7
+	case RealTimeClock:
+		return 0xF8
+	case RealTimeUndefined:
+		return 0xF9
+	case RealTimeStart:
+		return 0xFA
+	case RealTimeContinue:
+		return 0xFB
+	case RealTimeStop:
+		return 0xFC
+	case RealTimeActiveSensing:
+		return 0xFE
+	case RealTimeSystemReset:
+		return 0xFF
+	}
+	return 0x00
 }
