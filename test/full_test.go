@@ -25,7 +25,7 @@ func TestDeepDispatch(t *testing.T) {
 				sysex.Korg: korgsysex.MultiFormatHandler{
 					Format4: format4.MultiDeviceHandler{
 						Handlers: map[uint8]map[korgdevices.Device]format4.SingleDeviceHandler{
-							0xFF: map[korgdevices.Device]format4.SingleDeviceHandler{
+							format4.AllChannels: map[korgdevices.Device]format4.SingleDeviceHandler{
 								korgdevices.NanoKONTROL2: format4.SingleDeviceHandlerFunc(func(data []byte) error {
 									nanoKontrol = data
 									return nil
