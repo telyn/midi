@@ -24,12 +24,15 @@ func TestParse(t *testing.T) {
 		},
 	}
 	for i, test := range tests {
-		msg := sysex.Parse(test.Input)
+		msg, err := sysex.Parse(test.Input)
+		if err != nil {
+			t.Errorf("%d error: %v", i, err)
+		}
 		if test.Vendor != msg.Vendor {
 			t.Errorf("%d Vendor %d was not the expected %s (%d)", i, msg.Vendor, test.Vendor.String(), test.Vendor)
 		}
 		if !reflect.DeepEqual(test.Data, msg.Data) {
-			t.Errorf("Wrong data\nExpected %x\nReceived %x", i, test.Data, msg.Data)
+			t.Errorf("%d Wrong data\nExpected %x\nReceived %x", i, test.Data, msg.Data)
 		}
 	}
 }
