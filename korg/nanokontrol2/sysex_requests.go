@@ -1,9 +1,11 @@
-package nanokontrol
+package nanokontrol2
 
 import (
 	"fmt"
 
-	"github.com/telyn/nanokontrol/korgsysex"
+	"github.com/telyn/midi/korg/korgdevices"
+	"github.com/telyn/midi/korg/korgsysex/format4"
+	"github.com/telyn/midi/sysex"
 )
 
 const (
@@ -16,6 +18,7 @@ const (
 )
 
 type DataDumpRequest struct {
+	Channel    byte
 	FunctionID byte
 }
 
@@ -24,12 +27,17 @@ func (ddr *DataDumpRequest) Parse(b []byte) error {
 	return nil
 }
 
-func (ddr DataDumpRequest) KorgSysEx(channel uint8) korgsysex.Message {
-	return NewKorgSysEx(channel, []byte{
-		DataDumpRequestID,
-		ddr.FunctionID,
-		0x00,
-	})
+func (ddr DataDumpRequest) SysEx() sysex.SysEx {
+	return format4.Message{
+		Channel: ddr.Channel,
+		Device:  korgdevices.NanoKONTROL2,
+		SubID:   0x00,
+		Data: []byte{
+			DataDumpRequestID,
+			ddr.FunctionID,
+			0x00,
+		},
+	}.SysEx()
 }
 
 func (ddr DataDumpRequest) String() string {
@@ -46,66 +54,52 @@ func (ddr DataDumpRequest) Message() Message {
 	return ddr
 }
 
-type GetModeRequest struct{}
+type GetModeRequest struct {
+	Channel uint8
+}
 
-func (gmr GetModeRequest) KorgSysEx(channel uint8) korgsysex.Message {
+func (gmr GetModeRequest) SysEx() sysex.SysEx {
 	return DataDumpRequest{
+		Channel:    gmr.Channel,
 		FunctionID: ModeRequestFunctionID,
-	}.KorgSysEx(channel)
+	}.SysEx()
 }
 
 func (msg GetModeRequest) String() string {
 	return "Request to get mode"
 }
 
+// SetModeRequest tells the NanoKONTROL to enter/leave KORG Native Mode
 type SetModeRequest struct {
-	Mode bool
+	Channel    uint8
+	NativeMode bool
 }
 
-func (smr SetModeRequest) KorgSysEx(channel uint8) korgsysex.Message {
+func (smr SetModeRequest) SysEx() sysex.SysEx {
 	mode := byte(0)
-	if smr.Mode {
+	if smr.NativeMode {
 		mode = 0x01
 	}
-	return NewKorgSysEx(channel, []byte{
-		SetModeRequestID,
-		0x00,
-		mode,
-	})
+	return format4.Message{
+		Channel: smr.Channel,
+		Device:  korgdevices.NanoKONTROL2,
+		SubID:   0x00,
+		Data: []byte{
+			SetModeRequestID,
+			0x00,
+			mode,
+		},
+	}.SysEx()
 }
 
 func (smr *SetModeRequest) Parse(b []byte) error {
-	smr.Mode = b[1] == 0x01
+	smr.NativeMode = b[1] == 0x01
 	return nil
 }
 
 func (smr SetModeRequest) String() string {
-	if smr.Mode {
+	if smr.NativeMode {
 		return "Request to set NanoKONTROL2 to Native Mode"
 	}
 	return "Request to set NanoKONTROL2 mode to MIDI mode"
-}
-
-type SearchRequest struct {
-	EchoBackID byte
-}
-
-func (sr SearchRequest) String() string {
-	return fmt.Sprintf("NanoKONTROL2 search request with echo ID %x", sr.EchoBackID)
-}
-
-// KorgSysEx converts the SearchRequest into a korgsysex.Message
-// channel is unused in search request messages
-func (sr SearchRequest) KorgSysEx(channel uint8) korgsysex.Message {
-	return korgsysex.Message{
-		Format: 5,
-		Data: []byte{
-			0x00, // 0 for request, 1 for response
-			sr.EchoBackID,
-		},
-	}
-}
-
-func (sr *SearchRequest) Parse(b []byte) error {
-	sr.EchoBackID = b[1]
 }

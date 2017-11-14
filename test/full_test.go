@@ -19,7 +19,7 @@ func TestDeepDispatch(t *testing.T) {
 	nanoKontrol := []byte{}
 	searchResponseMajor := uint16(0)
 
-	dispatch := midi.Dispatch{
+	dispatch := midi.Dispatcher{
 		Handlers: map[msgs.Kind]msgs.Handler{
 			msgs.SystemExclusive: sysex.Handler{
 				sysex.Korg: korgsysex.MultiFormatHandler{

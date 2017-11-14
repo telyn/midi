@@ -1,8 +1,6 @@
 package stream
 
 import (
-	"fmt"
-
 	"github.com/telyn/midi/msgs"
 )
 
@@ -33,7 +31,7 @@ func (s *Stream) SetStatus(b byte) {
 
 func (s *Stream) ConsumeByte(b byte) (message msgs.Message, messageReady bool) {
 	k := msgs.KindOf(b)
-	fmt.Printf("byte %x kind %v status %x\n", b, k, k.Byte())
+	//fmt.Printf("byte %x kind %v status %x\n", b, k, k.Byte())
 	//  process realtime messages first, so that they can interrupt other messages
 	if k.RealTime() {
 		return msgs.Message{Kind: k}, true
@@ -59,11 +57,11 @@ func (s *Stream) ConsumeByte(b byte) (message msgs.Message, messageReady bool) {
 		if s.len < 1 {
 			return msgs.Message{Kind: msgs.DataByte}, false
 		}
-		fmt.Println("s.len >= 1")
+		//fmt.Println("s.len >= 1")
 		// we do desire data, so append it to the current message
 		s.cur.Data = append(s.cur.Data, b)
-		fmt.Printf("appended, s.cur.Data: %x\n", s.cur.Data)
-		fmt.Printf("len: %d, len(s.cur.Data): %d\n", s.len, len(s.cur.Data))
+		//fmt.Printf("appended, s.cur.Data: %x\n", s.cur.Data)
+		//fmt.Printf("len: %d, len(s.cur.Data): %d\n", s.len, len(s.cur.Data))
 		// if we fill the data buffer, return it and start a new message with the current status
 		if len(s.cur.Data) == s.len {
 			message = s.cur
@@ -76,4 +74,13 @@ func (s *Stream) ConsumeByte(b byte) (message msgs.Message, messageReady bool) {
 	s.SetStatus(b)
 	return message, false
 
+}
+
+func (s Stream) ConsumeBytes(data []byte) (messages []msgs.Message) {
+	for _, b := range data {
+		if msg, ok := s.ConsumeByte(b); ok {
+			messages = append(messages, msg)
+		}
+	}
+	return
 }

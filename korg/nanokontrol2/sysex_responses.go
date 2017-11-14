@@ -1,9 +1,11 @@
-package nanokontrol
+package nanokontrol2
 
 import (
 	"fmt"
 
-	"github.com/telyn/nanokontrol/korgsysex"
+	"github.com/telyn/midi/korg/korgdevices"
+	"github.com/telyn/midi/korg/korgsysex/format4"
+	"github.com/telyn/midi/sysex"
 )
 
 const (
@@ -17,6 +19,7 @@ const (
 )
 
 type DataDumpTwoByteResponse struct {
+	Channel    byte
 	FunctionID byte
 	Data       byte
 }
@@ -27,12 +30,17 @@ func (ddr *DataDumpTwoByteResponse) Parse(b []byte) error {
 	return nil
 }
 
-func (ddr DataDumpTwoByteResponse) KorgSysEx(channel uint8) korgsysex.Message {
-	return NewKorgSysEx(channel, []byte{
-		DataDumpResponseID,
-		ddr.FunctionID,
-		ddr.Data,
-	})
+func (ddr DataDumpTwoByteResponse) SysEx() sysex.SysEx {
+	return format4.Message{
+		Channel: ddr.Channel,
+		Device:  korgdevices.NanoKONTROL2,
+		SubID:   0x00,
+		Data: []byte{
+			DataDumpResponseID,
+			ddr.FunctionID,
+			ddr.Data,
+		},
+	}.SysEx()
 }
 func (ddr DataDumpTwoByteResponse) String() string {
 	return fmt.Sprintf("Data response: Function %v: %v", ddr.FunctionID, ddr.Data)
@@ -51,10 +59,11 @@ func (ddr DataDumpTwoByteResponse) Message() Message {
 }
 
 type GetModeResponse struct {
-	Mode bool
+	Channel uint8
+	Mode    bool
 }
 
-func (gmr GetModeResponse) KorgSysEx(channel uint8) korgsysex.Message {
+func (gmr GetModeResponse) SysEx() sysex.SysEx {
 	data := byte(0x2)
 	if gmr.Mode {
 		data = 0x3
@@ -62,7 +71,7 @@ func (gmr GetModeResponse) KorgSysEx(channel uint8) korgsysex.Message {
 	return DataDumpTwoByteResponse{
 		FunctionID: ModeResponseFunctionID,
 		Data:       data,
-	}.KorgSysEx(channel)
+	}.SysEx()
 }
 
 func (gmr GetModeResponse) String() string {
@@ -73,18 +82,24 @@ func (gmr GetModeResponse) String() string {
 }
 
 type SetModeResponse struct {
-	Mode bool
+	Channel byte
+	Mode    bool
 }
 
-func (gmr SetModeResponse) KorgSysEx(channel uint8) korgsysex.Message {
+func (smr SetModeResponse) SysEx() sysex.SysEx {
 	data := byte(0x2)
-	if gmr.Mode {
+	if smr.Mode {
 		data = 0x3
 	}
-	return NewKorgSysEx(channel, []byte{
-		SetModeResponseID,
-		data,
-	})
+	return format4.Message{
+		Channel: smr.Channel,
+		Device:  korgdevices.NanoKONTROL2,
+		SubID:   0x00,
+		Data: []byte{
+			SetModeResponseID,
+			data,
+		},
+	}.SysEx()
 }
 
 func (gmr *SetModeResponse) Parse(bytes []byte) error {

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 
 	"github.com/telyn/midi/korg/korgdevices"
+	"github.com/telyn/midi/sysex"
 )
 
 // Message is a type of message which
@@ -55,4 +56,17 @@ func Parse(channel uint8, data []byte) (message Message, err error) {
 	message.SubID, err = buf.ReadByte()
 	message.Data = buf.Bytes()
 	return
+}
+
+func (m Message) SysEx() sysex.SysEx {
+	msg := sysex.SysEx{
+		Vendor: sysex.Korg,
+		Data: []byte{
+			0x40 | m.Channel,
+		},
+	}
+	msg.Data = append(msg.Data, m.Device.Bytes()...)
+	msg.Data = append(msg.Data, m.SubID)
+	msg.Data = append(msg.Data, m.Data...)
+	return msg
 }

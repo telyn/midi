@@ -1,27 +1,21 @@
-package nanokontrol
+package nanokontrol2
 
 import (
-	"io"
-
-	"github.com/telyn/nanokontrol/korgsysex"
-	"github.com/telyn/nanokontrol/sysex"
+	"github.com/telyn/midi/korg/korgsysex/format4"
+	"github.com/telyn/midi/sysex"
 )
 
-type SysExMessage interface {
-	KorgSysEx(channel uint8) korgsysex.Message
-}
-
-func ParseSysEx(in korgsysex.Message) (out Message, err error) {
+func ParseSysEx(in format4.Message) (out sysex.SysExer, err error) {
 	msgType := in.Data[0]
 	switch msgType {
 	case DataDumpRequestID:
 		msg := DataDumpRequest{}
 		err = msg.Parse(in.Data[1:])
-		out = msg.Message()
+		out = msg
 	case DataDumpTwoByteResponseID:
 		msg := DataDumpTwoByteResponse{}
 		err = msg.Parse(in.Data[1:])
-		out = msg.Message()
+		out = msg
 	case SetModeRequestID:
 		msg := SetModeRequest{}
 		err = msg.Parse(in.Data[1:])
@@ -32,18 +26,4 @@ func ParseSysEx(in korgsysex.Message) (out Message, err error) {
 		out = msg
 	}
 	return
-}
-
-func WriteSysEx(msg SysExMessage, channel uint8, wr io.Writer) error {
-	return sysex.Write(msg.KorgSysEx(channel), wr)
-}
-
-func NewKorgSysEx(channel uint8, data []byte) korgsysex.Message {
-	return korgsysex.Message{
-		Format:  4,
-		Channel: channel,
-		Device:  DeviceID,
-		Data:    data,
-	}
-
 }

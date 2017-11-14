@@ -1,6 +1,7 @@
 package search
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/telyn/midi/sysex"
@@ -19,6 +20,12 @@ func (sr Request) SysEx() sysex.SysEx {
 			sr.EchoBackID,
 		},
 	}
+}
+
+func ParseRequest(b []byte) (sr Request, err error) {
+	buf := bytes.NewBuffer(b)
+	sr.EchoBackID, err = buf.ReadByte()
+	return
 }
 
 func (sr Request) String() string {

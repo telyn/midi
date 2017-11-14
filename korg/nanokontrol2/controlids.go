@@ -1,4 +1,4 @@
-package nanokontrol
+package nanokontrol2
 
 //go:generate stringer -type=ControlID
 

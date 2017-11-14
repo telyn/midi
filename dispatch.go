@@ -6,13 +6,13 @@ import (
 	"github.com/telyn/midi/msgs"
 )
 
-type Dispatch struct {
+type Dispatcher struct {
 	DefaultHandler msgs.Handler
 	Handlers       map[msgs.Kind]msgs.Handler
 }
 
 // HandleMessage handles the given message. Note that it is NOT thread-safe!
-func (d *Dispatch) HandleMessage(msg msgs.Message) error {
+func (d *Dispatcher) HandleMessage(msg msgs.Message) error {
 	h := d.Handlers[msg.Kind]
 	if h == nil {
 		if d.DefaultHandler != nil {

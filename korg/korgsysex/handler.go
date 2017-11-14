@@ -22,7 +22,7 @@ type MultiFormatHandler struct {
 
 func (h MultiFormatHandler) Handle(msg sysex.SysEx) error {
 	format := FormatOf(msg) << 4
-	fmt.Printf("FORMAT: %x\n", format)
+	//fmt.Printf("FORMAT: %x\n", format)
 	switch format {
 	case Format4:
 		f4m, err := format4.Parse(ChannelOf(msg), msg.Data[1:])
